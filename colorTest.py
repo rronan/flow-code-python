@@ -43,7 +43,7 @@ writeFlowFile.write(F, 'colorTest.flo')
 flow = readFlowFile.read('colorTest.flo')
 
 u = flow[: , : , 0]
-v = flow[: , : , 1]		
+v = flow[: , : , 1]
 
 img = computeColor.computeColor(u/truerange, v/truerange)
 

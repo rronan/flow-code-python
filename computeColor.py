@@ -9,14 +9,17 @@
 #   Date: 26/04/2017
 
 #	For more information, check http://vision.middlebury.edu/flow/ 
- 
 import cv2
 import sys
 import numpy as np
 import argparse
+#from pyvirtualdisplay import Display
 
 import readFlowFile
 
+
+#display = Display(visible=0, size=(500, 500))
+#display.start()
 
 def makeColorwheel():
 
@@ -48,7 +51,7 @@ def makeColorwheel():
 	col += YG;
 
 	#GC
-	colorwheel[col:GC+col, 1]= 255 
+	colorwheel[col:GC+col, 1]= 255
 	colorwheel[col:GC+col, 2] = np.floor(255*np.arange(0, GC, 1)/GC)
 	col += GC;
 
@@ -58,14 +61,14 @@ def makeColorwheel():
 	col += CB;
 
 	#BM
-	colorwheel[col:BM+col, 2]= 255 
+	colorwheel[col:BM+col, 2]= 255
 	colorwheel[col:BM+col, 0] = np.floor(255*np.arange(0, BM, 1)/BM)
 	col += BM;
 
 	#MR
 	colorwheel[col:MR+col, 2]= 255 - np.floor(255*np.arange(0, MR, 1)/MR)
 	colorwheel[col:MR+col, 0] = 255
-	return 	colorwheel
+	return colorwheel
 
 def computeColor(u, v):
 
@@ -73,18 +76,18 @@ def computeColor(u, v):
 	nan_u = np.isnan(u)
 	nan_v = np.isnan(v)
 	nan_u = np.where(nan_u)
-	nan_v = np.where(nan_v) 
+	nan_v = np.where(nan_v)
 
 	u[nan_u] = 0
 	u[nan_v] = 0
-	v[nan_u] = 0 
+	v[nan_u] = 0
 	v[nan_v] = 0
 
 	ncols = colorwheel.shape[0]
 	radius = np.sqrt(u**2 + v**2)
 	a = np.arctan2(-v, -u) / np.pi
 	fk = (a+1) /2 * (ncols-1) # -1~1 maped to 1~ncols
-	k0 = fk.astype(np.uint8)	 # 1, 2, ..., ncols
+	k0 = fk.astype(np.uint8) # 1, 2, ..., ncols
 	k1 = k0+1;
 	k1[k1 == ncols] = 0
 	f = fk - k0
@@ -125,7 +128,7 @@ def computeImg(flow):
 	greater_v = np.where(v > UNKNOWN_FLOW_THRESH)
 	u[greater_u] = 0
 	u[greater_v] = 0
-	v[greater_u] = 0 
+	v[greater_u] = 0
 	v[greater_v] = 0
 
 	maxu = max([maxu, np.amax(u)])
@@ -133,7 +136,7 @@ def computeImg(flow):
 
 	maxv = max([maxv, np.amax(v)])
 	minv = min([minv, np.amin(v)])
-	rad = np.sqrt(np.multiply(u,u)+np.multiply(v,v)) 
+	rad = np.sqrt(np.multiply(u,u)+np.multiply(v,v))
 	maxrad = max([maxrad, np.amax(rad)])
 	print('max flow: %.4f flow range: u = %.3f .. %.3f; v = %.3f .. %.3f\n' % (maxrad, minu, maxu, minv, maxv))
 
@@ -145,21 +148,23 @@ def computeImg(flow):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument(
-	  '--flowfile',
-	  type=str,
-	  default='colorTest.flo',
-	  help='Flow file'
+            '--flowfile',
+            type=str,
+            default='colorTest.flo',
+            help='Flow file'
 	)
 	parser.add_argument(
-	  '--write',
-	  type=bool,
-	  default=False,
-	  help='write flow as png'
-	)
+            '--write',
+            type=bool,
+            default=False,
+            help='write flow as png'
+        )
 	file = parser.parse_args().flowfile
 	flow = readFlowFile.read(file)
-	img = computeImg(flow)	
-	cv2.imshow(file, img)
+	flow /= 6
+	print(flow.shape)
+	img = computeImg(flow)
+	#cv2.imshow(file, img)
 	k = cv2.waitKey()
 	if parser.parse_args().write:
 		cv2.imwrite(file[:-4]+'.png', img)
